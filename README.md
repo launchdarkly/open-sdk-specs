@@ -1,8 +1,8 @@
 # LaunchDarkly SDK Specifications
 
-This repository contains open-sourced specifications for specific functionality of LaunchDarkly SDK implementations. These specifications aim to provide a deeper understanding of LaunchDarkly SDKs and assist in developing SDK extensions such as hooks.
+This repository contains open-sourced specifications for specific functionalities within LaunchDarkly SDK implementations. It does not contain a specification for an entire SDK.
 
-These specifications focus on specific functionalities of the LaunchDarkly SDKs and are not a specification for an entire SDK.
+These specifications provide a deeper understanding of LaunchDarkly SDKs and assist in developing SDK extensions such as hooks.
 
 LaunchDarkly overview
 -------------------------
