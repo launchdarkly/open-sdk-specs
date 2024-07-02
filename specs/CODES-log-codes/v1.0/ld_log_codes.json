@@ -1,0 +1,137 @@
+{
+  "$id": "ld_log_codes",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Log Codes",
+  "description": "Defines LaunchDarkly SDK Log Codes",
+  "type": "object",
+  "minItems": 0,
+  "properties": {
+    "systems": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/system"
+      }
+    },
+    "classes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/class"
+      }
+    },
+    "conditions": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+:[0-9]+:[0-9]+$": {
+        "$ref": "#/$defs/condition"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["systems", "classes", "conditions"],
+  "$defs": {
+    "condition": {
+      "type": "object",
+      "required": [
+        "name",
+        "specifier",
+        "class",
+        "system",
+        "description",
+        "message"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "specifier": {
+          "type": "number"
+        },
+        "class": {
+          "type": "number"
+        },
+        "system": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        },
+        "message": {
+          "$ref": "#/$defs/message"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "deprecatedReason": {
+          "type": "string"
+        },
+        "superseded": {
+          "type": "string",
+          "pattern": "^[0-9]+:[0-9]+:[0-9]+$"
+        },
+        "supersededReason": {
+          "type": "string"
+        }
+      },
+      "dependentRequired": {
+        "deprecated": [
+          "deprecatedReason"
+        ],
+        "superseded": [
+          "supersededReason"
+        ]
+      },
+      "additionalProperties": false
+    },
+    "class": {
+      "type": "object",
+      "required": [
+        "specifier",
+        "description"
+      ],
+      "properties": {
+        "specifier": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "system": {
+      "type": "object",
+      "required": [
+        "specifier",
+        "description"
+      ],
+      "properties": {
+        "specifier": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "object",
+      "required": [
+        "parameterized"
+      ],
+      "properties": {
+        "parameterized": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
