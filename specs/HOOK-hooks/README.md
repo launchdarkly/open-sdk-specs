@@ -24,7 +24,7 @@ In the future, `Hooks` may be extended to mutable cases, such as decorating cont
 
 `Hooks` add their logic at different points of execution called `stages` or `handlers`.
 
-A hypothetical hook that supports an evaluation series, identify series, as well a a handler for flag configuration changing:
+A hypothetical hook that supports an evaluation series, identify series, as well as a handler for flag configuration changing:
 ```mermaid
 block-beta
   columns 6
