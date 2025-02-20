@@ -24,7 +24,7 @@ In the future, `Hooks` may be extended to mutable cases, such as decorating cont
 
 `Hooks` add their logic at different points of execution called `stages` or `handlers`.
 
-A hypothetical hook that supports an evaluation series, identify series, as well a handler for flag configuration changing:
+A hypothetical hook that supports an evaluation series, identify series, as well a a handler for flag configuration changing:
 ```mermaid
 block-beta
   columns 6
@@ -152,6 +152,7 @@ A data structure containing:
 - context (LDContext, readonly, required)
 - defaultValue (LDValue, readonly, required)
 - method (string/enumeration, readonly, required): The method being executed, for instance `LDClient.variationBool`.
+- environmentId (string, readonly, optional): The environment the SDK is connected to. This is provided by LaunchDarkly and only available once initialization has completed.
 
 #### EvaluationSeriesData
 
@@ -281,3 +282,198 @@ Example:
 ### Requirement 1.3.7.1
 
 > When an error prevents a `stage` from returning `series data`, then the client should use the data from the previous successful stage, or empty data if there is no previous stage.
+
+## 1.4 Identify Series
+
+Hook stages that are executed during the execution of an identify method call as well as during initialization. This series currently applies to client-side SDKs only.
+
+### Condition 1.4.1
+
+The SDK is a client-side SDK.
+
+#### Conditional Requirement 1.4.1.1
+
+> Hooks **MUST** support a `beforeIdentify` stage. It accepts an `IdentifySeriesContext` and `IdentifySeriesData` and returns `IdentifySeriesData`.
+
+The `IdentifySeriesData` input will be empty for `beforeIdentify` method call, but in the future, it could be populated by a preceding step.
+
+#### Conditional Requirement 1.4.1.2
+
+> The `beforeIdentify` stage **MUST** be executed at the start of the identification process before loading cached values or making any network calls associated with the identification process. It **SHOULD** be executed as close as possible to the start of the `identify` or initialization method.
+
+#### Conditional Requirement 1.4.1.3
+
+> Hooks **MUST** support an `afterIdentify` stage.  It accepts an `IdentifySeriesContext`, `IdentifySeriesData`, and a `IdentifyResult` and returns `IdentifySeriesData`.
+
+The return value from `afterIdentify` will be unused initially, but it could be used if an additional stage was added that executes later in the series.
+
+The `IdentifyResult` will contain the results of the identification process. This could include an indication of a successful identification process, terminal failure, or that the identification has been superseded. Not all SDKs will have the same possible status values.
+
+#### Conditional Requirement 1.4.1.4
+
+> The `afterIdentify` stage **MUST** be executed after the identification process completes. It **SHOULD** be executed as close as possible to the end of the identification process. If the `identify` or initialization method has a timeout, and the identification process continues after that timeout, then the `afterIdentify` is not called when the method times out.
+
+It is possible for the `afterIdentify` method to never be called. Most errors encountered during identification are non-terminal, and the process continues to retry.
+
+#### Conditional Requirement 1.4.1.5
+
+> The `afterIdentify` stage **MUST** be executed with the `IdentifySeriesData` returned by the previous stage.
+
+For example, an implementation may create an OpenTelemetry `span` in the `beforeIdentify` stage and then close that
+`span` in `afterIdentify`. Propagating `IdentifySeriesData` between the different stages provides a simple mechanism of handling per series invocations.
+
+### Types
+
+#### IdentifySeriesContext
+
+A data structure containing:
+- context (LDContext, readonly, required)
+- timeout (duration/number, readonly, optional) - The concrete type will be SDK dependent and could be a duration or a number in SDK specific units.
+- environmentId (string, readonly, optional): The environment the SDK is connected to. This is provided by LaunchDarkly and only available once initialization has completed. For the first identification this would usually not be available until `afterIdentify`.
+
+
+#### IdentifySeriesData
+
+A map that can be used to pass implementation-specific data between `stages` in the series. The map should be indexed by a `string` and allow any value type.
+
+Example typings:
+```typescript
+ReadonlyMap<string, unknown>
+```
+
+```csharp
+ImmutableDictionary<string, object>
+```
+
+IdentifySeriesData should be immutable when possible. When it is not possible for the data to be immutable, the documentation should specify that the value should not be mutated.
+
+IdentifySeriesData should support being created based on existing data to simplify method implementation.
+
+```csharp
+public IdentifySeriesData beforeEvaluation(IdentifySeriesContext context, IdentifySeriesData data) {
+  /* generate some thing that is needed in afterEvaluation. */
+  var builder = IdentifySeriesData.builderOf(data);
+  builder.setValue("my-data", myData);
+  return builder.build();
+}
+```
+
+#### IdentifyResult
+
+A data structure containing:
+- status (enum, readonly, required)
+
+Example status:
+- Error - Identify failed.
+- Shed - Superseded by a new identify.
+- Success - Identify completed successfully.
+
+## 1.5 Configuration Handlers
+
+Handlers which are executed on SDK client configuration changes.
+
+### Condition 1.5.1
+
+The SDK is a client-side SDK.
+
+#### Conditional Requirement 1.4.1.1
+
+> Hooks **MUST** support a `flagConfigurationChanged` handler. It accepts `FlagConfiguration` and has no return value.
+
+#### Conditional Requirement 1.4.1.2
+
+> The `flagConfigurationChanged` handler must be invoked whenever there is a flag configuration change. The handler must be unconditionally invoked on any identify, patch, update or delete even if the evaluated flag value and associated details are the same.
+
+### Types
+
+#### FlagConfigurationDetails
+
+A data structure containing:
+- replace (boolean, readonly, required) - If present the associated flag details replace any existing flag detail.
+- details (map, readonly, required) - A map of flag keys to an associated `LDEvaluationDetail`. The `LDEvaluationDetail` should be optional and an omitted value indicates that the flag was deleted.
+
+### Examples
+
+#### Replace existing flag configuration
+
+##### FlagConfigurationDetails
+```
+{
+  "replace": true,
+  "details": {
+    "flagA": {
+      "reason": { "kind": 'RULE_MATCH', "ruleId": 'rule1', "ruleIndex": 0 },
+      "value": false,
+      "variationIndex": 1,
+    },
+    "flagB": {
+      "reason": { "kind": 'FALLTHROUGH'},
+      "value": true,
+      "variationIndex": 0,
+    }
+  }
+}
+```
+##### Explanation
+
+Replace is true, so the current flag configuration consists only of "flagA" and "flagB". Any previous flag data is discarded.
+
+#### Update a single flag
+
+##### FlagConfigurationDetails
+```
+{
+  "replace": false,
+  "details": {
+    "flagA": {
+      "reason": { "kind": 'FALLTHROUGH' },
+      "value": true,
+      "variationIndex": 0,
+    },
+  }
+}
+```
+
+##### Explanation
+
+Replace is false, so this is an update of "flagA" with updated details. If "flagA" did not previously exist, then this represents the addition of a flag.
+
+#### A single flag is deleted
+
+##### FlagConfigurationDetails
+```
+{
+  "replace": false,
+  "details": {
+    "flagA": null,
+  }
+}
+```
+
+##### Explanation
+
+Replace is false, so this is an update of "flagA". The details are null, which indicates "flagA" has been deleted.
+
+An SDK may use any optional type, but for a JSON representation `null` should be used, as `undefined` would not be serialized.
+
+#### A flag is updated and a flag is deleted
+
+##### FlagConfigurationDetails
+```
+{
+  "replace": false,
+  "details": {
+    "flagB": null,
+    "flagC": {
+      "reason": { "kind": 'FALLTHROUGH' },
+      "value": true,
+      "variationIndex": 0,
+    },
+
+  }
+}
+```
+
+##### Explanation
+
+Replace is false, so this is an update of "flagB" and "flagC". "flagB" has been deleted, and "flagC" has been created or updated.
