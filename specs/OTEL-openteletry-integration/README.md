@@ -6,14 +6,14 @@
 
 | Link                                       | Description          |
 |--------------------------------------------|----------------------|
-| [OpenTelemetry Feature Flag in Spans](https://opentelemetry.io/docs/specs/semconv/feature-flags/feature-flags-spans/) | OpenTelemetry feature flag semantics for spans. |
+| [OpenTelemetry Feature Flag in Spans](https://opentelemetry.io/docs/specs/semconv/attributes-registry/feature-flag/) | OpenTelemetry feature flag semantics for spans. |
 | [Hooks](../HOOK-hooks/README.md) | Support for hooks in SDKs. |
 
 # 1. OpenTelemetry Integration
 
 ## Introduction
 
-It would benefit our customers if they could enhance their observability data with information about flag evaluations. LaunchDarkly could also use SDK telemetry data to build features correlating flag evaluations with other observed data, such as latency and errors.
+It would benefit our customers if they could enhance their observability data with information about flag evaluations. LaunchDarkly could also use SDK telemetry data to build features that correlate flag evaluations with other observed data such as latency and errors.
 
 OpenTelemetry Integration packages will build upon the [Hooks](../HOOK-hooks/README.md) specification to enrich OpenTelemetry data with feature flag evaluations.
 
@@ -31,7 +31,7 @@ OpenTelemetry supports multiple types of telemetry data, including:
   - The flag configuration has changed.
   - An error has been encountered.
 
-For now, our integration packages are going to focus on tracing use cases. The packages will be designed to allow the addition of other use cases.
+For now our integration packages are going to focus on tracing use cases. The packages will be designed to allow the addition of other use cases.
 
 ## 1.1 OpenTelemetry Integration
 
@@ -165,6 +165,30 @@ Some vendors support semantic names for evaluations for instance, the variant co
 SHOULD be a semantic identifier for a value. If one is unavailable, a stringified version of the value can be used.
 ```
 
+### Requirement 1.2.2.9
+
+> The `feature_flag` span event **MUST** support an optional `feature_flag.set.id`.
+
+This attribute is part of the OpenTelemetry semantic conventions for feature flags.
+
+### Condition 1.2.2.9.1
+
+> The `environmentId` is specified in the configuration.
+
+### Conditional Requirement 1.2.2.9.1.1
+
+> The `feature_flag.set.id` **MUST** contain the `environmentId` specified in the configuration.
+
+### Condition 1.2.2.9.2
+
+> The `environmentId` is provided in the `EvaluationSeriesContext`, and is not provided in the configuration.
+
+### Conditional Requirement 1.2.2.9.1.1
+
+> The `feature_flag.set.id` **MUST** contain the `environmentId` provided in the `EvaluationSeriesContext`.
+
+If the `environmentId` is specified in both the configuration, and in the `EvaluationSeriesContext`, then the one provided in the configuration will take precedence.
+
 ### Types
 
 ### feature_flag span event
@@ -250,3 +274,21 @@ Example:
 ```
 const span = this.tracer.startSpan(hookContext.method, undefined, context.active());
 ```
+
+### Requirement 1.2.4
+
+> The tracing hook **MUST** support configuring an optional `environmentId` which allows the user to specify the environment ID.
+
+```
+hooks: [new TracingHook({environmentId: 'the-environment-id'})]
+```
+
+### Requirement 1.2.4.1
+
+> The tracing hook **MUST** validate that the `environmentId` is a non-empty string.
+
+If the id is not valid, then it will be equivalent to not having specified the `environmentId`.
+
+### Requirement 1.2.4.2
+
+> The tracing hook **MUST** log when an invalid `environmentId` is provided.
