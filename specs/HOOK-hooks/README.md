@@ -7,7 +7,7 @@
 | Link                                       | Description          |
 |--------------------------------------------|----------------------|
 | [OpenFeature Hooks](https://github.com/open-feature/spec/blob/main/specification/sections/04-hooks.md) | OpenFeature hooks specification. |
-| [Inspection Interfaces](https://launchdarkly.atlassian.net/wiki/spaces/PD/pages/2112061761/Proposal+Inspection+Interfaces) | Inspection interfaces. |
+| [Inspection Interfaces](https://docs.launchdarkly.com/sdk/features/inspectors) | Inspection interfaces. |
 
 # 1. Hooks
 
