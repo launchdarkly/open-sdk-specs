@@ -7,7 +7,7 @@
 | Link                                       | Description          |
 |--------------------------------------------|----------------------|
 | [OpenFeature Hooks](https://github.com/open-feature/spec/blob/main/specification/sections/04-hooks.md) | OpenFeature hooks specification. |
-| [Inspection Interfaces](https://docs.launchdarkly.com/sdk/features/inspectors) | Inspection interfaces. |
+| [Inspection Interfaces](https://launchdarkly.atlassian.net/wiki/spaces/PD/pages/2112061761/Proposal+Inspection+Interfaces) | Inspection interfaces. |
 
 # 1. Hooks
 
@@ -477,3 +477,32 @@ An SDK may use any optional type, but for a JSON representation `null` should be
 ##### Explanation
 
 Replace is false, so this is an update of "flagB" and "flagC". "flagB" has been deleted, and "flagC" has been created or updated.
+
+## 1.6 Track Series
+
+Hook stages that are executed during the execution of a track method call.
+
+### Requirement 1.6.1
+
+> Hooks **MUST** support a `afterTrack` handler. It accepts an `TrackSeriesContext` and has no return value.
+
+### Requirement 1.6.2
+
+> The `afterTrack` handler **MUST** be executed during the execution of the track method after the `custom` event has been enqueued.
+
+For track there isn't a meaningful before/after as tracking is a point-in-time operation, so only the `afterTrack` is being specified at this time.
+
+If mutability is added to hooks in the future, then `beforeTrack` could be added, and the signature extended with a `hook data` parameter and return.
+
+If the no `custom` event could be enqueued, because of an invalid context or JSON data, then the `afterTrack` method will not be called.
+
+### Types
+
+#### TrackSeriesContext
+
+A data structure containing:
+- context (LDContext, readonly, required)
+- key (string, required): The key associated with the track call.
+- value (number, optional): Optional numeric (double) measurement associated with the track call.
+- data (JSON): Any application-specified data associated with track call.
+- environmentId (string, readonly, optional): The environment the SDK is connected to. This is provided by LaunchDarkly and only available once initialization has completed.
