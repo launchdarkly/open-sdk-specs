@@ -494,7 +494,7 @@ For track there isn't a meaningful before/after as tracking is a point-in-time o
 
 If mutability is added to hooks in the future, then `beforeTrack` could be added, and the signature extended with a `hook data` parameter and return.
 
-If the no `custom` event could be enqueued, because of an invalid context or JSON data, then the `afterTrack` method will not be called.
+If no `custom` event could be enqueued, because of an invalid context or JSON data, then the `afterTrack` method will not be called.
 
 ### Types
 
