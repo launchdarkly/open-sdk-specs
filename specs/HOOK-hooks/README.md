@@ -484,7 +484,7 @@ Hook stages that are executed during the execution of a track method call.
 
 ### Requirement 1.6.1
 
-> Hooks **MUST** support a `afterTrack` handler. It accepts an `TrackSeriesContext` and has no return value.
+> Hooks **MUST** support an `afterTrack` handler. It accepts an `TrackSeriesContext` and has no return value.
 
 ### Requirement 1.6.2
 
