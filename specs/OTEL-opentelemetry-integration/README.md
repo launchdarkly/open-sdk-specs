@@ -87,7 +87,7 @@ Example span event:
       name: 'feature_flag',
       attributes: {
         'feature_flag.key': 'my-boolean-flag',
-        'feature_flag.provider_name': 'LaunchDarkly Tracing Hook',
+        'feature_flag.provider.name': 'LaunchDarkly Tracing Hook',
         'feature_flag.context.key': 'bob'
       },
       time: [ 1710285750, 507739034 ], // Added by otel API.
@@ -120,7 +120,7 @@ Example:
 
 ### Requirement 1.2.2.2
 
-> The feature_flag event **MUST** have the following attributes: `feature_flag.key`, `feature_flag.provider_name`, and `feature_flag.context.key`.
+> The feature_flag event **MUST** have the following attributes: `feature_flag.key`, `feature_flag.provider.name`, and `feature_flag.context.id`.
 
 ### Requirement 1.2.2.3
 
@@ -130,40 +130,36 @@ This attribute is part of the OpenTelemetry semantic conventions for feature fla
 
 ### Requirement 1.2.2.4
 
-> The `feature_flag.provider_name` attribute must be set to `LaunchDarkly`.
+> The `feature_flag.provider.name` attribute must be set to `LaunchDarkly`.
 
 This attribute is part of the OpenTelemetry semantic conventions for feature flags.
 
 ### Requirement 1.2.2.5
 
-> The `feature_flag.context.key` attribute must be set to the canonical key of the context the flag is being evaluated for.
-
-This attribute is NOT part of the OpenTelemetry semantic conventions for feature flags.
+> The `feature_flag.context.id` attribute must be set to the canonical key of the context the flag is being evaluated for.
 
 ### Requirement 1.2.2.6
 
-> The `feature_flag` span event **MUST** support an optional `feature_flag.variant`.
+> The `feature_flag` span event **MUST** support an optional `feature_flag.result.value`.
 
 This attribute is part of the OpenTelemetry semantic conventions for feature flags.
 
 ### Requirement 1.2.2.7
 
-> The `feature_flag.variant` **MUST** be configured at hook registration/construction and default to disabled.
+> The `feature_flag.result.value` **MUST** be configured at hook registration/construction and default to disabled.
 
 Example:
 ```
-const client = init('sdk-key', { hooks: [new TracingHook({includeVariant: true})] });
+const client = init('sdk-key', { hooks: [new TracingHook({includeValue: true})] });
 ```
+
+#### Compatibility
+
+Previously `feature_flag.variant` was being used and it had some overloaded semantics. As we were using the value if the SDK had an `includeVariant` setting, it may be retained and control this field instead. On a major version the setting should be renamed to `includeValue`.
 
 ### Requirement 1.2.2.8
 
-> When enabled the `feature_flag.variant` **MUST** contain the evaluated value of the flag as a string.
-
-Some vendors support semantic names for evaluations for instance, the variant could be `red`, and the flag's value may be `#FF0000`. The OpenTelemetry semantic conventions support a fallback in this case.
-
-```
-SHOULD be a semantic identifier for a value. If one is unavailable, a stringified version of the value can be used.
-```
+> When enabled the `feature_flag.result.value` **MUST** contain the evaluated value of the flag as a string.
 
 ### Requirement 1.2.2.9
 
@@ -189,13 +185,31 @@ This attribute is part of the OpenTelemetry semantic conventions for feature fla
 
 If the `environmentId` is specified in both the configuration, and in the `EvaluationSeriesContext`, then the one provided in the configuration will take precedence.
 
+### Requirement 1.2.2.10
+
+> The `feature_flag` span event **MUST** support a boolean `feature_flag.result.reason.inExperiment` attribute.
+
+#### Requirement 1.2.2.10.1
+
+> The `feature_flag.result.reason.inExperiment` **MUST** be set to `true` if the result was part of an experiment. If the result was not part of an experiment, then the attribute **MUST** be omitted.
+
+This is a LaunchDarkly specific attribute and is not part of the OpenTelemetry semantic conventions.
+
+### Requirement 1.2.2.11
+
+> The `feature_flag` span event **MUST** support a numeric `feature_flag.result.variationIndex` attribute.
+
+### Requirement 1.2.2.11.1
+
+> The `feature_flag.result.variationIndex` **MUST** be set to the `variationIndex` of the result. If no `variationIndex` is available, then the attribute **MUST** be omitted.
+
 ### Types
 
 ### feature_flag span event
 
 - `feature_flag.key` (string, required)
-- `feature_flag.context.key` (string, required)
-- `feature_flag.provider_name` (string, required)
+- `feature_flag.context.id` (string, required)
+- `feature_flag.provider.name` (string, required)
 - `feature_flag.variant` (string, optional)
 
 ### Requirement 1.2.3
