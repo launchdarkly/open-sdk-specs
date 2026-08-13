@@ -1,6 +1,6 @@
-| id   | status    | title                     | description                                 | applies-to            |
-|------|-----------|---------------------------|---------------------------------------------|-----------------------|
-| OTEL | ACCEPTED  | OpenTelemetry Integration | Specification for OpenTelemetry Integration | client-sdk,server-sdk |
+| id   | version | status    | title                     | description                                 | applies-to            |
+|------|---------|-----------|---------------------------|---------------------------------------------|-----------------------|
+| OTEL | 1.0.0   | ACCEPTED  | OpenTelemetry Integration | Specification for OpenTelemetry Integration | client-sdk,server-sdk |
 
 **_See Also:_**
 
@@ -57,7 +57,7 @@ The support for the OpenTelemetry API package should be as broad as possible. Re
 
 The implementation should use an approach similar to NPM peer dependencies when possible. Peer dependencies require the application to install the dependency directly, and then the package will use those versions (assuming they meet the semantic versioning requirements).
 
-### Requirement 1.1.2
+### Requirement 1.1.3
 
 > The integration **MUST** provide a tracing hook implementation.
 
@@ -179,7 +179,7 @@ This attribute is part of the OpenTelemetry semantic conventions for feature fla
 
 > The `environmentId` is provided in the `EvaluationSeriesContext`, and is not provided in the configuration.
 
-### Conditional Requirement 1.2.2.9.1.1
+### Conditional Requirement 1.2.2.9.2.1
 
 > The `feature_flag.set.id` **MUST** contain the `environmentId` provided in the `EvaluationSeriesContext`.
 
@@ -210,7 +210,10 @@ This is a LaunchDarkly specific attribute and is not part of the OpenTelemetry s
 - `feature_flag.key` (string, required)
 - `feature_flag.context.id` (string, required)
 - `feature_flag.provider.name` (string, required)
-- `feature_flag.variant` (string, optional)
+- `feature_flag.set.id` (string, optional)
+- `feature_flag.result.value` (string, optional)
+- `feature_flag.result.variationIndex` (int, optional)
+- `feature_flag.result.reason.inExperiment` (boolean, optional)
 
 ### Requirement 1.2.3
 
