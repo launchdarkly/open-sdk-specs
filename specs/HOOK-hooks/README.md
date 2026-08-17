@@ -1,6 +1,6 @@
-| id    | status    | title | description                                 | applies-to             |
-|-------|-----------|-------|---------------------------------------------|------------------------|
-| HOOK  | ACCEPTED  | Hooks | Specification of hooks and their lifecycle. | server-sdk, client-sdk |
+| id    | version | status    | title | description                                 | applies-to             |
+|-------|---------|-----------|-------|---------------------------------------------|------------------------|
+| HOOK  | 1.0.0   | ACCEPTED  | Hooks | Specification of hooks and their lifecycle. | server-sdk, client-sdk |
 
 **_See Also:_**
 
@@ -120,7 +120,7 @@ Hook stages that are executed during the execution of a variation method call.
 
 The `EvaluationSeriesData` input is unused for the `beforeEvaluation` stage, but it could be used if an additional stage was added that executes earlier in the series.
 
-### Requirement 1.2.1.2
+### Requirement 1.2.1.1
 
 > The `beforeEvaluation` stage **MUST** be executed before the flag value has been determined. It **SHOULD** be executed as close as possible to the start of the `variation` method.
 
@@ -130,13 +130,13 @@ The `EvaluationSeriesData` input is unused for the `beforeEvaluation` stage, but
 
 The return value from `afterEvaluation` will be unused initially, but it could be used if an additional stage was added that executes later in the series.
 
-### Requirement 1.2.2.2
+### Requirement 1.2.2.1
 
 > The `afterEvaluation` stage **MUST** be executed after the flag detail (EvaluationDetail) has been determined. It **SHOULD** be executed as close as possible to the end of the `variation` method.
 
 The `EvaluationDetail` determined during flag evaluation is passed as the `EvaluationDetail` parameter to the stage.
 
-### Requirement 1.2.2.3
+### Requirement 1.2.2.2
 
 > The `afterEvaluation` stage **MUST** be executed with the `EvaluationSeriesData` returned by the previous stage.
 
@@ -206,8 +206,14 @@ For example, the stage would be executed synchronously on the thread of the vari
 
 > The client **MUST** execute hooks in the following order:
 >
+> Stages:
 > - beforeEvaluation: Executed in the order of hook registration.
 > - afterEvaluation: Executed in reverse of the order of hook registration.
+> - beforeIdentify: Executed in the order of hook registration.
+> - afterIdentify: Executed in reverse of the order of hook registration.
+> - afterTrack: Executed in the order of hook registration.
+> Handler:
+> All handlers should be run in the order of hook registration.
 
 For example, given the initialization, `init('sdk-key', {hooks: new HookA(), new HookB()})`, for a given invocation:
 - beforeEvaluation: HookA.beforeEvaluation, HookB.beforeEvaluation
@@ -376,11 +382,11 @@ Handlers which are executed on SDK client configuration changes.
 
 The SDK is a client-side SDK.
 
-#### Conditional Requirement 1.4.1.1
+#### Conditional Requirement 1.5.1.1
 
 > Hooks **MUST** support a `flagConfigurationChanged` handler. It accepts `FlagConfiguration` and has no return value.
 
-#### Conditional Requirement 1.4.1.2
+#### Conditional Requirement 1.5.1.2
 
 > The `flagConfigurationChanged` handler must be invoked whenever there is a flag configuration change. The handler must be unconditionally invoked on any identify, patch, update or delete even if the evaluated flag value and associated details are the same.
 
@@ -488,13 +494,13 @@ Hook stages that are executed during the execution of a track method call.
 
 ### Requirement 1.6.2
 
-> The `afterTrack` handler **MUST** be executed during the execution of the track method after the `custom` event has been enqueued.
+> The `afterTrack` handler **MUST** be executed during the execution of the track method after the `"custom"` event has been enqueued.
 
 For track there isn't a meaningful before/after as tracking is a point-in-time operation, so only the `afterTrack` is being specified at this time.
 
 If mutability is added to hooks in the future, then `beforeTrack` could be added, and the signature extended with a `hook data` parameter and return.
 
-If no `custom` event could be enqueued, because of an invalid context or JSON data, then the `afterTrack` method will not be called.
+If no `"custom"` event could be enqueued, because of an invalid context or JSON data, then the `afterTrack` method will not be called.
 
 ### Types
 
@@ -503,6 +509,6 @@ If no `custom` event could be enqueued, because of an invalid context or JSON da
 A data structure containing:
 - context (LDContext, readonly, required)
 - key (string, required): The key associated with the track call.
-- value (number, optional): Optional numeric (double) measurement associated with the track call.
+- metricValue (number, optional): Optional numeric (double) measurement associated with the track call.
 - data (JSON): Any application-specified data associated with track call.
 - environmentId (string, readonly, optional): The environment the SDK is connected to. This is provided by LaunchDarkly and only available once initialization has completed.
